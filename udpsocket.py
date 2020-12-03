@@ -256,7 +256,9 @@ class udpsocket():
                     self.conn.settimeout(HANDSHAKE_TIME_OUT)
                     for i in range(0, 5 + int(((time.time() - start_time) / packages) * HANDSHAKE_TIME_OUT)):
                         self.conn.sendall(
-                            UDPPacket.create_packet(self.receiver[0], self.receiver[1], UDPPacket.generate_sequence(self.sequence), BYE_BIT_VAL).convert_data_into_bytes())
+                            UDPPacket.create_packet(
+                                self.receiver[0], self.receiver[1], UDPPacket.generate_sequence(self.sequence), BYE_BIT_VAL
+                            ).convert_data_into_bytes())
                         try:
                             data = self.conn.recv(FRAME_SIZE)
                         except Exception as e:
