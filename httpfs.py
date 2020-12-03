@@ -27,7 +27,7 @@ import pathlib
 from httpserverlibrary import HTTPServerLibrary
 import magic
 from lockfile import FileLock
-import rsocket as arq_socket
+import udpsocket
 
 
 MAPPING_DICT = {
@@ -293,7 +293,7 @@ class HTTPF:
         try:
             while not is_processed:
                 if self._params.arq:
-                    data = c.recvall().decode("utf-8")
+                    data = c.recvfrom().decode("utf-8")
                 else:
                     data = c.recv(2048).decode("utf-8")
                 if data:
@@ -329,14 +329,17 @@ class HTTPF:
                     self.check_and_print_debug_message(
                         "Response: " + http_s_obj.response())
                     if self._params.arq:
-                        c.sendall(http_s_obj.response().encode("utf-8"), False)
+                        c.sendto(http_s_obj.response().encode("utf-8"), False)
                     else:
                         c.sendall(http_s_obj.response().encode("utf-8"))
                     res_data = http_s_obj.getData()
                     try:
                         c.sendall(res_data.encode("utf-8"))
                     except Exception as e:
-                        c.sendall(res_data)
+                        try:
+                            c.sendall(res_data)
+                        except Exception as e:
+                            c.sendto(res_data)
                     is_processed = True
                 else:
                     is_processed = True
@@ -393,7 +396,7 @@ class HTTPF:
         """It is used to start the socket server.
         """
         if self._params.arq:
-            s = arq_socket.rsocket()
+            s = udpsocket.udpsocket()
         else:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

@@ -3,7 +3,7 @@
 
 import socket
 from urllib.parse import urlparse
-import rsocket as arq_socket
+import udpsocket
 
 class HTTPClientLibrary:
     """
@@ -281,16 +281,17 @@ class HTTPClientLibrary:
             a HTTPClientLibrary class object to client
         """
         if self.getArq():
-            s = arq_socket.rsocket()
+            s = udpsocket.udpsocket()
         else:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.connect((self.host, self.port))
-            s.sendall(self.content.encode("utf-8"))
             self.count += 1            
             if self.getArq():
-                self.response = s.recvall().decode("utf-8")
+                s.sendto(self.content.encode("utf-8"))
+                self.response = s.recvfrom().decode("utf-8")
             else:
+                s.sendall(self.content.encode("utf-8"))
                 self.response = s.recv(2048, socket.MSG_WAITALL).decode("utf-8")     
             while self.checkredirection():
                 print("=============== Redirecting... ===============")
