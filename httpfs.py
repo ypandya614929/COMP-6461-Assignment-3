@@ -396,7 +396,7 @@ class HTTPF:
         """It is used to start the socket server.
         """
         if self._params.arq:
-            s = udpsocket.udpsocket()
+            s = udpsocket.UDPSocket()
         else:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

@@ -24,8 +24,29 @@ from constants import *
 
 
 class UDPPacket:
+    """
+    UDPPacket class used to represent all the packet operations
+    Methods
+    -------
+    __init__(self, packet_type, sequence, ip, port, payload)
+        It is contructor for UDPPacket class.
+    __str__(self)
+        It is string representation of the UDPPacket class.
+    create_packet(ip, port, sequence, type, payload)
+        It is used to create packet.
+    data_package(ip, port, content, stop, sequence)
+        It is used to generate data package.
+    generate_sequence(curr_sequence, next_seq)
+        It is used to generate sequence number
+    convert_data_into_bytes(self)
+        It is used convert string data into bytes
+    generate_packet_from_bytes(data)
+        It is used generate packet from bytesarray.
+    """
 
     def __init__(self, packet_type, sequence, ip, port, payload):
+        """It is contructor for UDPPacket class.
+        """
         self.packet_type = int(packet_type)
         self.ip = ip
         self.port = int(port)
@@ -34,10 +55,32 @@ class UDPPacket:
         self.is_send = False
 
     def __str__(self):
+        """It is string representation of the UDPPacket class.
+        """
         return "sequence : {} | ip : {} | port : {} | size : {}".format(self.sequence, self.ip, self.port, len(self.payload))
 
     @staticmethod
     def create_packet(ip, port, sequence=0, type=DATA_BIT_VAL, payload=""):
+        """It is used to create packet.
+
+        Parameters
+        -------
+        ip
+            a string containing ip
+        port
+            integer of port number
+        sequence
+            integer of sequence number
+        type
+            integer of bit value
+        payload
+            string containing data
+
+        Returns
+        -------
+        UDPPacket
+            object of UDPPacket class.
+        """
         if not payload:
             payload = "".encode("utf-8")
         return UDPPacket(
@@ -47,6 +90,27 @@ class UDPPacket:
 
     @staticmethod
     def data_package(ip, port, content, stop, sequence=0):
+        """It is used to generate data package.
+
+        Parameters
+        -------
+        ip
+            a string containing ip
+        port
+            integer of port number
+        content
+            packet content
+        stop
+            boolean flag to stop for last packet
+        sequence
+            integer of sequence number
+
+        Returns
+        -------
+        dict
+            dictionary containing list of packets and
+            sequence number
+        """
         res_dict = {}
         package = []
         chunk_data_list = [
@@ -67,6 +131,20 @@ class UDPPacket:
 
     @staticmethod
     def generate_sequence(curr_sequence, next_seq=None):
+        """It is used to generate sequence number.
+
+        Parameters
+        -------
+        curr_sequence
+            integer containg current sequence
+        next_seq
+            integer containg next sequence
+
+        Returns
+        -------
+        integer/uint
+            new sequence for packets
+        """
         if ((next_seq == 0) or (next_seq != None)):
             new_sequence = uint(curr_sequence) + uint(next_seq)
             if new_sequence < curr_sequence:
@@ -78,6 +156,13 @@ class UDPPacket:
         return new_sequence
 
     def convert_data_into_bytes(self):
+        """It is used convert string data into bytes.
+
+        Returns
+        -------
+        bytesarray
+            array containing bytes values
+        """
         byte_list = bytearray()
         byte_list.extend(self.packet_type.to_bytes(1, byteorder='big'))
         byte_list.extend(self.sequence.to_bytes(4, byteorder='big'))
@@ -91,6 +176,18 @@ class UDPPacket:
 
     @staticmethod
     def generate_packet_from_bytes(data):
+        """It is used generate packet from bytesarray.
+
+        Parameters
+        -------
+        data
+            a bytes containing data
+
+        Returns
+        -------
+        UDPPacket
+            object of UDPPacket class.
+        """
         if (len(data) < MINIMUM_LEN) or (len(data) > MAXIMUM_LEN):
             raise ValueError(
                 "UDPPacket is with size {} bytes is not allowed.".format(len(data)))
@@ -104,9 +201,42 @@ class UDPPacket:
         return packet
 
 
-class udpsocket():
+class UDPSocket():
+    """
+    UDPSocket class used to represent all the socket operations
+    Methods
+    -------
+    __init__(self, router)
+        It is contructor for UDPSocket class.
+    hand_shaking(self, address, sequence)
+        It is used for handshaking between client and server.
+    connect(self, address)
+        It is used to connect between client server.
+    get_sequence_no(self, sliding_window, comp_sequence)
+        It is used to get the sequence number from list of packets.
+    reset_sliding_window(self, sliding_window)
+        It is used to reset sliding window list.
+    generate_sliding_window_list(self, sequence)
+        It is used to generate sliding window list.
+    updatetimer(self)
+        It is used to update timer.
+    resettimer(self)
+        It is used to reset timer.
+    sendto(self, data, stop)
+        It is used to send the packet.
+    recvfrom(self)
+        It is used to receive packet.
+    bind(self, ip)
+        It is used to bind the connection.
+    accept(self)
+        It is used to accept the connection for multiple client.
+    close(self)
+        It is used to close the connection.
+    """
 
     def __init__(self, router=('localhost', 3000)):
+        """It is contructor for UDPPacket class.
+        """
         self.router = router
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.receiver = None
@@ -114,6 +244,20 @@ class udpsocket():
         self.timer_mgmt = [False, False, 0]
 
     def hand_shaking(self, address, sequence):
+        """It is used for handshaking between client and server.
+
+        Parameters
+        -------
+        address
+            a string containing ip
+        sequence
+            a integer of sequence number
+
+        Returns
+        -------
+        set
+            set containing packet's ip and port
+        """
         ip = ipaddress.ip_address(socket.gethostbyname(address[0]))
         self.conn.connect(self.router)
         for i in range(0, 15):
@@ -132,6 +276,13 @@ class udpsocket():
         raise Exception("Time out while Handshaking!")
 
     def connect(self, address):
+        """It is used to connect between client server.
+
+        Parameters
+        -------
+        address
+            a string containing ip
+        """
         try:
             self.receiver = self.hand_shaking(address, self.sequence)
             self.sequence = UDPPacket.generate_sequence(self.sequence, 1)
@@ -139,6 +290,15 @@ class udpsocket():
             raise e
 
     def get_sequence_no(self, sliding_window, comp_sequence):
+        """It is used to get the sequence number from list of packets.
+
+        Parameters
+        -------
+        sliding_window
+            a list containing sequence and packets
+        comp_sequence
+            a integer containing comparision sequence
+        """
         for s_no, sequence_or_packet in enumerate(sliding_window):
             if (sequence_or_packet == comp_sequence) or \
                 (isinstance(sequence_or_packet, UDPPacket) and
@@ -146,12 +306,36 @@ class udpsocket():
                 return s_no
 
     def reset_sliding_window(self, sliding_window):
+        """It is used to reset sliding window list.
+
+        Parameters
+        -------
+        sliding_window
+            a list containing sequence and packets
+
+        Returns
+        -------
+        bool
+            True if packet is in the window else False
+        """
         for sequence_or_packet in sliding_window:
             if isinstance(sequence_or_packet, UDPPacket):
                 return False
         return True
 
     def generate_sliding_window_list(self, sequence):
+        """It is used to generate sliding window list.
+
+        Parameters
+        -------
+        sequence
+            a integer of sequence number
+
+        Returns
+        -------
+        list
+            a list containing sequence and packets
+        """
         sliding_window = []
         for i in range(0, SLIDING_WINDOW_SIZE):
             sliding_window.append(
@@ -159,14 +343,28 @@ class udpsocket():
         return sliding_window
 
     def updatetimer(self):
+        """It is used to update timer.
+        """
         self.timer_mgmt[0] = True
         self.timer_mgmt[1] = False
 
     def resettimer(self):
+        """It is used to reset timer.
+        """
         self.timer_mgmt[0] = False
         self.timer_mgmt[1] = True
 
     def sendto(self, data, stop=True):
+        """It is used to send the packet.
+
+        Parameters
+        -------
+        data
+            a bytes containing data
+        stop
+            a bool value for sending last packet
+
+        """
         start_time = time.time()
         timer = None
         self.timer_mgmt = [False, False, 0]
@@ -244,6 +442,8 @@ class udpsocket():
         pass
         
     def recvfrom(self):
+        """It is used to receive packet.
+        """
         start_time = time.time()
         packages = 0
         byte_data_list = bytearray()
@@ -307,14 +507,30 @@ class udpsocket():
                     )
 
     def bind(self, ip):
+        """It is used to bind the connection.
+
+        Parameters
+        -------
+        ip
+            a string containing ip
+
+        """
         self.conn.bind(ip)
 
     def accept(self):
+        """It is used to accept the connection for multiple client.
+        
+        Returns
+        -------
+        set
+            set containing socket object and packet's ip and port
+
+        """
         try:
             data, router = self.conn.recvfrom(MAXIMUM_LEN)
             packet = UDPPacket.generate_packet_from_bytes(data)
             if packet.packet_type == SYN_BIT_VAL:
-                udp_sock = udpsocket()
+                udp_sock = UDPSocket()
                 udp_sock.conn.sendto(UDPPacket.create_packet(
                     packet.ip, packet.port, packet.sequence, SYN_ACK_BIT_VAL
                 ).convert_data_into_bytes(), self.router)
@@ -331,4 +547,6 @@ class udpsocket():
             return None, None
 
     def close(self):
+        """It is used to close the connection.
+        """
         self.conn.close()

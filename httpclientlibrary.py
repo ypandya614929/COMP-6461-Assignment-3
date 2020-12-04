@@ -281,7 +281,7 @@ class HTTPClientLibrary:
             a HTTPClientLibrary class object to client
         """
         if self.getArq():
-            s = udpsocket.udpsocket()
+            s = udpsocket.UDPSocket()
         else:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:

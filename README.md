@@ -8,9 +8,9 @@ COMP-6461-Assignment-3
     pip install -r requirements.txt
 
 ### Start Router
-    - ./routers/macos/router --port=3000 --drop-rate=0.2 --seed 2387230234324
-    - ./routers/macos/router --port=3000 --max-delay=100ms --seed 2387230234324
-    - ./routers/macos/router --port=3000 --drop-rate=0.2 --max-delay=100ms --seed 2387230234324
+    - ./routers/macos/router --port=3000 --drop-rate=0.1
+    - ./routers/macos/router --port=3000 --max-delay=100ms
+    - ./routers/macos/router --port=3000 --drop-rate=0.1 --max-delay=100ms
 
 ### Start Server
     - python3 httpfs.py -arq -v -p 8080 -d .
